@@ -47,3 +47,4 @@ src/
 .tmp.driveupload/
 demo/
 *.pt
+output/
