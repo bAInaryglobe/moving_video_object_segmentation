@@ -97,8 +97,8 @@ if __name__ == '__main__':
     yolo_model = YOLO('yolov8n.pt').to(device)
 
     ## sam model
-    model_type = "vit_l"
-    sam = sam_model_registry[model_type](checkpoint=os.path.join(sam_checkpoints, vit_l))
+    model_type = "vit_h"
+    sam = sam_model_registry[model_type](checkpoint=os.path.join(sam_checkpoints, vit_h))
     sam = sam.to(device)
     predictor = SamPredictor(sam)
     
