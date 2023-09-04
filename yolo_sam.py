@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import time
+from multiprocessing import Pool
 
 from ultralytics import YOLO
 import torch
@@ -91,10 +92,16 @@ def optimized_show_mask(masks):
     combined_mask = np.sum(separate_rgb_masks, axis = 0)
     return combined_mask
 
+def process_mask(dim):
+    mask = masks[dim, :, :]
+    contours, hierarchy = cv2.findContours(image=mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
+    return contours
+
+
 if __name__ == '__main__':
     ## Load YOLO
     ## yolo model
-    yolo_model = YOLO('yolov8n.pt').to(device)
+    yolo_model = YOLO('yolov8x.pt').to(device)
 
     ## sam model
     model_type = "vit_h"
@@ -120,7 +127,7 @@ if __name__ == '__main__':
     fps = int(cap.get(5))
 
     # # Define the output video path
-    output_path = os.path.join(os.getcwd(), 'output', 'processed_video.mp4')
+    output_path = os.path.join(os.getcwd(), 'output', 'processed_video2.mp4')
 
     # # Create a VideoWriter object to save the processed frames
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -133,17 +140,24 @@ if __name__ == '__main__':
             #dispaly frame and colour mask in same window
             frame = ((frame/np.max(frame))*255).astype(np.uint8)
         
-            if masks is not None:
-                colour_mask = optimized_show_mask(masks.detach().cpu().numpy())
+            
+            # colour_mask = optimized_show_mask(masks.detach().cpu().numpy())
        
-                colour_mask = cv2.addWeighted(colour_mask.astype(np.uint8), 0.3, frame, 0.7, 0, dtype=cv2.CV_8U)#colour_mask.astype(np.uint8))
-            else:
-                colour_mask = frame
+            # colour_mask = cv2.addWeighted(colour_mask.astype(np.uint8), 0.3, frame, 0.7, 0, dtype=cv2.CV_8U)#colour_mask.astype(np.uint8))
+                
+            #-----------for contours -------
+            masks = np.squeeze(masks.detach().cpu().numpy(), axis = 1).astype(np.uint8)
+            #print('masks shape: ', masks.shape, masks.shape[0], np.unique(masks))
+            for dim in range(masks.shape[0]):
+                #print('in shape: ', masks[dim, :, :].shape)
+                contours, hierarchy = cv2.findContours(image = masks[dim, :, :], mode = cv2.RETR_TREE, method = cv2.CHAIN_APPROX_NONE)
+                cv2.drawContours(image = frame, contours=contours, contourIdx=-1, color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA)
+          
             #cv2.imshow('frame', frame)
             #cv2.imshow('frame', colour_mask)
         
             # Write the combined frame to the output video
-            out.write(colour_mask)
+            out.write(frame)
     
         # if cv2.waitKey(25) & 0xFF == ord('q'):
                 #break
