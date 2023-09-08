@@ -15,4 +15,4 @@
 
 
 ## Acknowledgement
-Thanks [SAM](https://github.com/facebookresearch/segment-anything) for their public code and released models.
+Thanks [SAM](https://github.com/facebookresearch/segment-anything) and YOLOv8 for their public code and released models.
